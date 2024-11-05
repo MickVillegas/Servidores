@@ -1,0 +1,16 @@
+from pydantic import BaseModel
+class Person(BaseModel):
+    id:int
+    age:int
+    name:str
+
+class Club(BaseModel):
+    people:list[Person]
+
+from sqlalchemy import Column, Integer, String
+from config.bd import Base
+class Amigo(Base):
+    __tablename__ = "amigos"
+    id = Column(Integer, primary_key = True)
+    age = Column(Integer)
+    name = Column(String)

@@ -1,0 +1,64 @@
+ 
+from fastapi import APIRouter
+rutas1 = APIRouter()
+from starlette import status
+#from modelos.modelos import Club, Person
+#clubPOesia = Club(people = [])
+from sqlalchemy.orm import Session
+from config.bd import get_db
+from fastapi import Depends
+from modelos.modelos import Amigo, Person
+
+@rutas1.get('/apil/amigosdelapoesia', status_code = status.HTTP_200_OK,response_model = list[Person])
+def mostrarAmigos(db:Session = Depends(get_db)) -> list[Person]:
+    return db.query(Amigo).all()
+
+from fastapi import HTTPException
+@rutas1.get('/apil/amigosdelapoesia/{amigo_id}', status_code = status.HTTP_200_OK, response_model = Person)
+def mostrarUnAmigo(amigo_id:int, db:Session = Depends(get_db)) -> Person:
+    #for persona in clubPOesia.people:
+    #    if persona.id == amigo_id:
+    #        return persona
+    resultado = db.query(Amigo).filter(Amigo.id == amigo_id).first()
+    if resultado:
+        return resultado
+    raise HTTPException(status_code = 404, detail = "Persona no encontrada")
+
+@rutas1.post('/apil/amigosdelapoesia', status_code = status.HTTP_201_CREATED,response_model = list[Person])
+def crearAmigos(amigo:Person, db:Session = Depends(get_db)) -> list[Person]:
+    #clubPOesia.people.append(amigo)
+    #return clubPOesia
+    nuevo_amigo = Amigo(id = amigo.id, age = amigo.age, name = amigo.name)
+    db.add(nuevo_amigo)
+    db.commit()
+    db.refresh(nuevo_amigo)
+    return db.query(Amigo).all()
+
+@rutas1.delete('/apil/amigosdelapoesia/{amigo_id}', status_code = status.HTTP_200_OK, response_model = Person)
+def borrarUnAmigo(amigo_id:int, db:Session = Depends(get_db)) -> Person:
+    #for persona in clubPOesia.people:
+    #    if persona.id == amigo_id:
+    #        clubPOesia.people.remove(persona)
+    #        return persona
+    resultado = db.query(Amigo).filter(Amigo.id == amigo_id).first()
+    if resultado:
+        db.delete(resultado)
+        db.commit()
+        return resultado
+    raise HTTPException(status_code=404, detail= "Persona no encontrada")
+
+@rutas1.put('/apil/amigosdelapoesia/{amigo_id}', status_code = status.HTTP_200_OK, response_model = Person)
+def actualizarUnAmigo(amigo_id:int, amigo_nuevosdatos:Person, db:Session = Depends(get_db)) -> Person:
+    #for persona in clubPOesia.people:
+    #    if persona.id == amigo_id:
+    #        clubPOesia.people.remove(persona)
+    #        clubPOesia.people.append(amigo_nuevosdatos)
+    #        return amigo_nuevosdatos
+    resultado = db.query(Amigo).filter(Amigo.id == amigo_id).first()
+    if resultado:
+        resultado.age = amigo_nuevosdatos.age
+        resultado.name = amigo_nuevosdatos.name
+        db.commit()
+        db.refresh(resultado)
+        return resultado
+    raise HTTPException(status_code=404, detail="NO se ha encontrado a la persona")
